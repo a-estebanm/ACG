@@ -7,9 +7,11 @@
 #include <cmath>
 #include <ctime>
 #include <chrono>
+#include <random>
 #include <vector>
+#include <algorithm>
 
-#define SIZE 1000000
+#define SIZE 100000000
 
 using namespace std::chrono;
 using namespace std;
@@ -20,15 +22,6 @@ struct Point
 {
     int x, y;
 };
-
-Point * pointynazer(int xArr[], int yArr[]){
-    static Point p[((sizeof(xArr))/(sizeof(xArr[0])))];
-    for (int i = 0; i < sizeof p; i++) {
-        p[i] = {xArr[i], yArr[i]};
-    }
-    return p;
-}
-
 /* Following two functions are needed for library function qsort().
 Refer: http://www.cplusplus.com/reference/clibrary/cstdlib/qsort/ */
 
@@ -109,7 +102,6 @@ float closestUtil(Point Px[], Point Py[], int n, bool *end)
 
 
     // Divide points in y sorted array around the vertical line.
-    // Assumption: All x coordinates are distinct.
     auto *Pyl = new Point[mid]; // y sorted points on left of vertical line
     auto *Pyr = new Point[n-mid]; // y sorted points on right of vertical line
     int li = 0, ri = 0; // indexes of left and right subarrays
@@ -139,6 +131,7 @@ float closestUtil(Point Px[], Point Py[], int n, bool *end)
         if (abs(Py[i].x - midPoint.x) < d)
             strip[j] = Py[i], j++;
 
+
     // Find the closest points in strip. Return the minimum of d and closest
     // distance is strip[]
     return stripClosest(strip, j, d);
@@ -167,29 +160,28 @@ float closest(Point P[], int n)
 
 // Driver program to test above functions
 
-void randomArray(int xarray[], int yarray[], int size) {
-    int i;
-
-    for (i = 0; i <= size - 1; i++) {
-        xarray[i] = rand() % 1000;
-        yarray[i] = rand() % 1000;
-    }
-}
-
 int main()
 {
-    srand( (unsigned)time( NULL ) );
+    srand( (unsigned)time( nullptr ) );
 
-    int * arrX = new int [SIZE];
-    int * arrY = new int [SIZE];
+    std::vector<int> xVector;
+    std::vector<int> yVector;
     auto *P = new Point[SIZE];
 
-    randomArray(arrX, arrY,SIZE);
+
+
+    for (int i = 0; i < SIZE; ++i) {
+        xVector.push_back(i + 1);
+        yVector.push_back(i + 1);
+    }
+    std::shuffle(xVector.begin(), xVector.end(), std::mt19937(std::random_device()()));
+    std::shuffle(yVector.begin(), yVector.end(), std::mt19937(std::random_device()()));
+
     for (int j = 0; j < SIZE; j++) {
-        P[j] = {arrX[j], arrY[j]};
+        P[j] = {xVector.at(j), yVector.at(j)};
     }
     auto start2 = high_resolution_clock::now();
-    //cout << "\nThe smallest distance with BF is " << bruteForce(P, n);
+    //cout << "\nThe smallest distance with BF is " << bruteForce(P, SIZE);
     auto stop2 = high_resolution_clock::now();
     auto duration2 = duration_cast<microseconds>(stop2 - start2);
     cout << " with time of computation of: " << duration2.count() << " microseconds" << endl;
