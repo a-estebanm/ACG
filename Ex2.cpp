@@ -15,7 +15,14 @@ using namespace std;
 using namespace std;
 
 
-std::vector <int> randomize(std::vector <int> vect, int range, int size){
+std::vector <float> randomize_flt(std::vector <float> vect, int size){
+    for (int i = 0; i < size; ++i) {
+        vect.push_back((float) rand()/RAND_MAX);
+    }
+    return vect;
+}
+
+std::vector <int> randomize_int(std::vector <int> vect, int range, int size){
     for (int i = 0; i < range; ++i) {
         vect.push_back(i + 1);
     }
@@ -33,25 +40,41 @@ std::vector <int> randomize(std::vector <int> vect, int range, int size){
     return result;
 }
 
-int dist(int x1, int x2){
+int dist_int(int x1, int x2){
     return abs(x2-x1);
 }
 
-int bruteForce(std::vector <int> vect, int n)
+float dist_flt(float x1, float x2){
+    return abs(x2-x1);
+}
+
+int bruteForce_int(std::vector <int> vect, int n)
 {
     int min  = INT32_MAX;
     int d;
     for (int i = 1; i < n ; i++) {
-        d = dist(vect.at(i-1), vect.at(i));
+        d = dist_int(vect.at(i-1), vect.at(i));
+        if(d < min) min = d;
+    }
+    return min;
+}
+
+float bruteForce_flt(std::vector <float> vect, int n)
+{
+    float min  = FLT_MAX;
+    float d;
+    for (int i = 1; i < n ; i++) {
+        d = dist_flt(vect.at(i-1), vect.at(i));
         if(d < min) min = d;
     }
     return min;
 }
 
 int main(){
+    srand((unsigned)time(nullptr));
 
-    std::vector <int> points;
-    points = randomize(points,100,20);
-    cout << "the min is " << bruteForce(points, 20);
+    std::vector <float> points;
+    points = randomize_flt(points,20);
+    cout << "the min is " << bruteForce_flt(points, 20);
 
 }
