@@ -16,7 +16,8 @@ using namespace std;
 
 
 std::vector <float> randomize_flt(std::vector <float> vect, int size){
-    std::default_random_engine gen;
+    std::random_device rd;
+    std::default_random_engine gen(rd());
     std::uniform_real_distribution<float> dist(0.0, FLT_MAX);
     for (int i = 0; i < size; ++i) {
         vect.push_back(dist(gen));
@@ -74,11 +75,11 @@ float bruteForce_flt(std::vector <float> vect, int n)
     return min;
 }
 
-vector<vector<float>> bucketSort(const vector<float>& vect, int n){
+vector<vector<float>> bucketer(const vector<float>& vect){
     vector<vector<float>> buckets(254);
     int exp;
     for(float i : vect){
-        i = frexp(i, &exp);
+        frexp(i, &exp);
         buckets.at(exp+125).push_back(i);
     }
     return buckets;
@@ -94,7 +95,8 @@ float dist_b(const vector<float>& bucket){
     return d;
 }
 
-float solveBucket(const vector<vector<float>>& buckets, int size){
+float bucketSort(const vector<float>& vect){
+    vector<vector<float>> buckets = bucketer(vect);
     float min = FLT_MAX;
     int bucket_num = 0;
     float d;
@@ -120,7 +122,6 @@ int main(){
     int size = 100;
     std::vector <float> points;
     points = randomize_flt(points,size);
-    int exp;
-    vector<vector<float>> buckets = bucketSort(points, size);
-    cout << "the min is " << bruteForce_flt(points, size);
+    cout << "the min is " << bruteForce_flt(points, size) <<"\n";
+    cout << "the min is " << bucketSort(points);
 }
