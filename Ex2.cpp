@@ -105,10 +105,10 @@ float bucketSort(const vector<float>& vect){
         if (bucket.size() > 1) {
         std::sort(bucket.begin(), bucket.end());
         d = dist_b(bucket);
-        if(d < min) min = d;
+        if(d < min && d!=0) min = d;
         if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
             d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
-            if(d < min) min = d;
+            if(d < min && d!= 0) min = d;
         }
         }
     }
@@ -119,9 +119,17 @@ float bucketSort(const vector<float>& vect){
 
 int main(){
     //srand(time(nullptr));
-    int size = 100;
+    int size = 10000;
     std::vector <float> points;
     points = randomize_flt(points,size);
-    cout << "the min is " << bruteForce_flt(points, size) <<"\n";
-    cout << "the min is " << bucketSort(points);
+    auto start2 = high_resolution_clock::now();
+    cout << "\nThe smallest distance with BF is " << bruteForce_flt(points, size);
+    auto stop2 = high_resolution_clock::now();
+    auto duration2 = duration_cast<microseconds>(stop2 - start2);
+    cout << " with time of computation of: " << duration2.count() << " microseconds" << endl;
+    auto start1 = high_resolution_clock::now();
+    cout << "The smallest distance with BucketSort is " << bucketSort(points);
+    auto stop1 = high_resolution_clock::now();
+    auto duration1 = duration_cast<microseconds>(stop1 - start1);
+    cout << " with time of computation of: " << duration1.count() << " microseconds" << endl;
 }
