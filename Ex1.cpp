@@ -160,7 +160,7 @@ float closest(Point P[], int n)
 
 // Driver program to test above functions
 
-int main()
+int main1()
 {
     srand( (unsigned)time( nullptr ) );
 
