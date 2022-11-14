@@ -66,8 +66,10 @@ float bruteForce_flt(std::vector <float> vect, int n)
     float min  = FLT_MAX;
     float d;
     for (int i = 1; i < n ; i++) {
-        d = dist_flt(vect.at(i-1), vect.at(i));
-        if(d < min && d != 0) min = d;
+        for (int j = i; j < n; j++) {
+            d = dist_flt(vect.at(i), vect.at(j));
+            if(d < min && d != 0) min = d;
+        }
     }
     return min;
 }
@@ -82,16 +84,43 @@ vector<vector<float>> bucketSort(const vector<float>& vect, int n){
     return buckets;
 }
 
+float dist_b(const vector<float>& bucket){
+    float d = FLT_MAX;
+    float t;
+    for (int i = 1; i < bucket.size(); i++) {
+        t = dist_flt(bucket.at(i), bucket.at(i - 1));
+        if(t < d) d = t;
+    }
+    return d;
+}
+
+float solveBucket(const vector<vector<float>>& buckets, int size){
+    float min = FLT_MAX;
+    int bucket_num = 0;
+    float d;
+    for(vector<float> bucket : buckets) {
+        bucket_num ++;
+        if (bucket.size() > 1) {
+        std::sort(bucket.begin(), bucket.end());
+        d = dist_b(bucket);
+        if(d < min) min = d;
+        if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
+            d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
+            if(d < min) min = d;
+        }
+        }
+    }
+    return min;
+}
+
+
+
 int main(){
-    srand((unsigned)time(nullptr));
-    int size = 100000;
+    //srand(time(nullptr));
+    int size = 100;
     std::vector <float> points;
     points = randomize_flt(points,size);
     int exp;
-    frexp(RAND_MAX, &exp);
-    cout << "exp min is " << exp;
-    frexp(FLT_MAX, &exp);
-    cout << "exp max is " <<exp;
     vector<vector<float>> buckets = bucketSort(points, size);
     cout << "the min is " << bruteForce_flt(points, size);
 }
