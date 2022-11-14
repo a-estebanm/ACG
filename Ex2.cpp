@@ -70,11 +70,23 @@ float bruteForce_flt(std::vector <float> vect, int n)
     return min;
 }
 
+vector<vector<float>> bucketSort(const vector<float>& vect, int n){
+    vector<vector<float>> buckets(255);
+    int exp;
+    for(float i : vect){
+        frexp(i, &exp);
+        buckets.at(exp+127).push_back(i);
+    }
+    return buckets;
+}
+
 int main(){
     srand((unsigned)time(nullptr));
-
+    int size = 10000;
     std::vector <float> points;
-    points = randomize_flt(points,20);
-    cout << "the min is " << bruteForce_flt(points, 20);
+    points = randomize_flt(points,size);
 
+
+    vector<vector<float>> buckets = bucketSort(points, size);
+    cout << "the min is " << bruteForce_flt(points, 20);
 }
