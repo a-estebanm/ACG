@@ -77,9 +77,11 @@ float bruteForce_flt(std::vector <float> vect, int n)
 
 vector<vector<float>> bucketer(const vector<float>& vect){
     vector<vector<float>> buckets(254);
+    int mask=8192;
     int exp;
+    mask=mask*(2^20);
     for(float i : vect){
-        frexp(i, &exp);
+        exp=mask && i;
         buckets.at(exp+125).push_back(i);
     }
     return buckets;
@@ -103,13 +105,12 @@ float bucketSort(const vector<float>& vect){
     for(vector<float> bucket : buckets) {
         bucket_num ++;
         if (bucket.size() > 1) {
-        std::sort(bucket.begin(), bucket.end());
-        d = dist_b(bucket);
-        if(d < min && d!=0) min = d;
-        if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
-            d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
-            if(d < min && d!= 0) min = d;
-        }
+            d = dist_b(bucket);
+            if(d < min && d!=0) min = d;
+            if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
+                d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
+                if(d < min && d!= 0) min = d;
+            }
         }
     }
     return min;
