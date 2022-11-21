@@ -121,16 +121,6 @@ float bucketSort(const vector<float>& vect){
             std::sort(bucket.begin(), bucket.end());
             d = dist_b(bucket);
             if(d < min && d!=0) min = d;
-            if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
-                d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
-                if(d < min && d!= 0) min = d;
-            }
-        }else if (bucket.size() == 1){
-            int next = nextBucket(buckets,bucket_num);
-            if(next!=0){
-                d = dist_flt(bucket.front(),buckets.at(next).front());
-                if(d < min && d!= 0) min = d;
-            }
         }
     }
     return min;
@@ -146,18 +136,8 @@ float bucketSort_brute(const vector<float>& vect){
     for(vector<float> bucket : buckets) {
         bucket_num ++;
         if (bucket.size() > 1) {
-            d = bruteForce_flt(bucket,bucket.size());
-            if(d < min) min = d;
-            if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
-                d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
-                if(d < min && d!= 0) min = d;
-            }
-         }else if (bucket.size() == 1){
-            int next = nextBucket(buckets,bucket_num);
-                    if(next!=0){
-                        d = dist_flt(bucket.front(),buckets.at(next).front());
-                        if(d < min && d!= 0) min = d;
-                    }
+            d = bruteForce_flt(bucket, bucket.size());
+            if (d < min) min = d;
         }
     }
     return min;
@@ -167,7 +147,7 @@ float bucketSort_brute(const vector<float>& vect){
 
 int main(){
     //srand(time(nullptr));
-    int size = 10000;
+    int size = 1000;
     std::vector <float> points;
     points = randomize_flt(points,size);
     auto start2 = high_resolution_clock::now();
