@@ -77,11 +77,9 @@ float bruteForce_flt(std::vector <float> vect, int n)
 
 vector<vector<float>> bucketer(const vector<float>& vect){
     vector<vector<float>> buckets(254);
-    int mask=8192;
     int exp;
-    mask=mask*(2^20);
     for(float i : vect){
-        exp=mask && i;
+        frexp(i, &exp);
         buckets.at(exp+125).push_back(i);
     }
     return buckets;
@@ -97,6 +95,21 @@ float dist_b(const vector<float>& bucket){
     return d;
 }
 
+int nextBucket(const vector<vector<float>>& buckets, int bucketNum){
+
+    int num = 0;
+
+    for (const vector<float>& bucket : buckets)
+        if(num <= bucketNum){
+            num++;
+            continue;
+        }else{
+            if(!bucket.empty()) return num;
+            num++;
+        }
+    return 0;
+}
+
 float bucketSort(const vector<float>& vect){
     vector<vector<float>> buckets = bucketer(vect);
     float min = FLT_MAX;
@@ -105,12 +118,46 @@ float bucketSort(const vector<float>& vect){
     for(vector<float> bucket : buckets) {
         bucket_num ++;
         if (bucket.size() > 1) {
+            std::sort(bucket.begin(), bucket.end());
             d = dist_b(bucket);
             if(d < min && d!=0) min = d;
             if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
                 d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
                 if(d < min && d!= 0) min = d;
             }
+        }else if (bucket.size() == 1){
+            int next = nextBucket(buckets,bucket_num);
+            if(next!=0){
+                d = dist_flt(bucket.front(),buckets.at(next).front());
+                if(d < min && d!= 0) min = d;
+            }
+        }
+    }
+    return min;
+}
+
+
+
+float bucketSort_brute(const vector<float>& vect){
+    vector<vector<float>> buckets = bucketer(vect);
+    float min = FLT_MAX;
+    int bucket_num = 0;
+    float d;
+    for(vector<float> bucket : buckets) {
+        bucket_num ++;
+        if (bucket.size() > 1) {
+            d = bruteForce_flt(bucket,bucket.size());
+            if(d < min) min = d;
+            if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
+                d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
+                if(d < min && d!= 0) min = d;
+            }
+         }else if (bucket.size() == 1){
+            int next = nextBucket(buckets,bucket_num);
+                    if(next!=0){
+                        d = dist_flt(bucket.front(),buckets.at(next).front());
+                        if(d < min && d!= 0) min = d;
+                    }
         }
     }
     return min;
