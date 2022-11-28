@@ -88,9 +88,26 @@ vector<vector<float>> bucketer(const vector<float>& vect){
 float dist_b(const vector<float>& bucket){
     float d = FLT_MAX;
     float t;
-
     for (int i = 1; i < bucket.size(); i++) {
         t = dist_flt(bucket.at(i), bucket.at(i - 1));
+        if(t < d) d = t;
+    }
+    return d;
+}
+
+float dist_b2(const vector<float>& bucket, const vector<float>& bucket2){
+    float d = FLT_MAX;
+    float t;
+    for (int i = 1; i < bucket.size()+bucket2.size(); i++) {
+        if(bucket.size()<i){
+            t = dist_flt(bucket.at(i), bucket.at(i - 1));
+        }
+        else if(bucket.size()==i){
+            t = dist_flt(bucket.at(bucket.size()-1), bucket2.at(0));
+        }
+        else{
+            t = dist_flt(bucket2.at(i-bucket.size()), bucket2.at(i - 1 - bucket.size()));
+        }
         if(t < d) d = t;
     }
     return d;
@@ -110,6 +127,69 @@ int nextBucket(const vector<vector<float>>& buckets, int bucketNum){
         }
     return 0;
 }
+
+float bucketSortW(const vector<float>& vect){
+    vector<vector<float>> buckets = bucketer(vect);
+    float min = FLT_MAX;
+    int bucket_num = 0;
+    float d;
+    int actual_min, cc;
+    int minp=INT32_MAX;
+    for(int i=0;i<buckets.size() && cc<25;i++) {
+        bucket_num ++;
+        if (buckets[i].size() > 1) {
+            std::sort(buckets[i].begin(), buckets[i].end());
+            actual_min=buckets[i][0];
+            if(minp>actual_min){
+                cc=0;
+                minp=actual_min;
+            }else{
+                cc++;
+            }
+            d = dist_b(buckets[i]);
+            if(d < min && d!=0) min = d;
+            if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
+                d = dist_flt(buckets[i].back(),buckets.at(bucket_num).front());
+                if(d < min && d!= 0) min = d;
+            }
+        }else if (buckets[i].size() == 1){
+            int next = nextBucket(buckets,bucket_num);
+            if(next!=0){
+                d = dist_flt(buckets[i].front(),buckets.at(next).front());
+                if(d < min && d!= 0) min = d;
+            }
+        }
+    }
+    return min;
+}
+
+
+
+float bucketSort_brute(const vector<float>& vect){
+    vector<vector<float>> buckets = bucketer(vect);
+    float min = FLT_MAX;
+    int bucket_num = 0;
+    float d;
+    for(vector<float> bucket : buckets) {
+        bucket_num ++;
+        if (bucket.size() > 1) {
+            d = bruteForce_flt(bucket,bucket.size());
+            if(d < min) min = d;
+            if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
+                d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
+                if(d < min && d!= 0) min = d;
+            }
+        }else if (bucket.size() == 1){
+            int next = nextBucket(buckets,bucket_num);
+            if(next!=0){
+                d = dist_flt(bucket.front(),buckets.at(next).front());
+                if(d < min && d!= 0) min = d;
+            }
+        }
+    }
+    return min;
+}
+
 float minimum(const vector<float>& bucket){
     float min=FLT_MAX;
     for(float v : bucket){
@@ -133,10 +213,10 @@ int minimum2(vector<vector<float>> buckets){
     }
     return minBucket;
 }
-float bucketSortW(const vector<float>& vect){
+float bucketSortW2(const vector<float>& vect){
     vector<vector<float>> buckets = bucketer(vect);
     float min = FLT_MAX;
-    float d;
+    float d,dnext;
     float minp=FLT_MAX;
     float actual_min;
     int cc;
@@ -152,7 +232,11 @@ float bucketSortW(const vector<float>& vect){
                 cc+=1;
             }
             d = dist_b(buckets[i]);
-            if(d < min && d!=0) min = d;
+            if(i!=buckets.size()-1) {
+                dnext= dist_flt(buckets[i].back(),buckets[i].front());
+            }
+            if(d < min && d!=0 && d < dnext) min = d;
+            else if(dnext < min && dnext!=0 && dnext < d) min = dnext;
         }
     }
     return min;
@@ -173,7 +257,7 @@ float bucketSort(const vector<float>& vect){
     return min;
 }
 
-float bucketSort_brute(const vector<float>& vect){
+float bucketSort_brute2(const vector<float>& vect){
     vector<vector<float>> buckets = bucketer(vect);
     float min = FLT_MAX;
     int bucket_num = 0;
@@ -210,5 +294,13 @@ int main(){
     auto stop3 = high_resolution_clock::now();
     auto duration3 = duration_cast<microseconds>(stop3 - start3);
     cout << " with time of computation of: " << duration3.count() << " microseconds" << endl;
+    /*
+    auto start4 = high_resolution_clock::now();
+    cout << "The smallest distance with BucketSortW2 is " << bucketSortW2(points);
+    auto stop4 = high_resolution_clock::now();
+    auto duration4 = duration_cast<microseconds>(stop4 - start4);
+    cout << " with time of computation of: " << duration4.count() << " microseconds" << endl;
+    */
+
 
 }
