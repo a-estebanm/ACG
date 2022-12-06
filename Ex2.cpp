@@ -19,7 +19,8 @@ using namespace std;
 std::vector <float> randomize_flt(std::vector <float> vect, int size){
     std::random_device rd;
     std::default_random_engine gen(rd());
-    std::uniform_real_distribution<float> dist(0.0, 0.1);
+    std::uniform_real_distribution<float> dist(0.0, 10000);
+//    std::normal_distribution<float> dist(1, 0);
     for (int i = 0; i < size; ++i) {
         vect.at(i) = (dist(gen)); //cambiado para evitar añadir al final
     }
@@ -52,7 +53,7 @@ float bruteForce_flt(std::vector <float> vect, int n)
 
 vector<vector<float>> bucketer(const vector<float>& vect, int size){
     vector<vector<float>> buckets(256);
-    int exp;
+    int exp = 0;
     int size_ap = size; //size aproximated of the bucket with the given exponent
     int  bucket_size[256] ={0};
     int z = 0;
@@ -64,7 +65,7 @@ vector<vector<float>> bucketer(const vector<float>& vect, int size){
         buckets.at(i) = bucket;
     }
     for(float i : vect){
-        frexp(i, &exp);
+//        frexp(i, &exp);
         try {
             buckets.at(exp + 127).at(bucket_size[exp + 127]++) = i;
         }catch (...){
@@ -90,6 +91,16 @@ vector<vector<float>> bucketer1(const vector<float>& vect, int size){ //Old func
     int exp;
     for(float i : vect){
         frexp(i, &exp);
+        buckets.at(exp+127).push_back(i);
+    }
+    return buckets;
+}
+
+vector<vector<float>> bucketer2(const vector<float>& vect, int size){ //Old function that doesn't take into account the size of buckets
+    vector<vector<float>> buckets(256);
+    int exp = 0;
+    for(float i : vect){
+//        frexp(i, &exp);
         buckets.at(exp+127).push_back(i);
     }
     return buckets;
@@ -128,7 +139,7 @@ int nextBucket(const vector<vector<float>>& buckets, int bucketNum){
 
 float bucketSort(const vector<float>& vect, int size){
 
-    vector<vector<float>> buckets = bucketer(vect, size);
+    vector<vector<float>> buckets = bucketer1(vect, size);
 //    print_buckets(buckets);
     float min = FLT_MAX;
     int bucket_num = 0;
@@ -207,7 +218,7 @@ float bucketSort2(const vector<float>& vect, int size){
 
 float bucketSortW2(const vector<float>& vect, int size){
     vector<vector<float>> buckets = bucketer1(vect, size);
-//    print_buckets(buckets);
+    print_buckets(buckets);
     float min = FLT_MAX;
     int bucket_num = 0;
     float d;
@@ -320,9 +331,11 @@ float bucketSort_brute(const vector<float>& vect, int size){
 
 int main(){
     //srand(time(nullptr));
-    int size = 100000;
+    int size = 1000000;
     std::vector <float> points (size); //With this we initialize it as an array with size elements avoiding copies
     points = randomize_flt(points,size);
+    points.at(1) = 0.0000000000000001;
+    points.at(2) = 0.0000000000000002;
 //    auto start2 = high_resolution_clock::now();
 //    cout << "\nThe smallest distance with BF is " << bruteForce_flt(points, size);
 //    auto stop2 = high_resolution_clock::now();
@@ -333,23 +346,25 @@ int main(){
     float d1;
     for(int i = 0; i<repeat; i++){
         auto start1 = high_resolution_clock::now();
-        d1 = bucketSort(points, size);
+//        bucketer(points,size);
+        d1 = bucketSortW2(points, size);
         auto stop1 = high_resolution_clock::now();
         auto duration1 = duration_cast<microseconds>(stop1 - start1);
         time1 += duration1.count();
     }
-    printf("The smallest distance with BucketSortW2 is %.27f",d1);
+    printf("The smallest distance with Window is %.27f",d1);
     cout << " with time of computation of: " << time1/repeat << " microseconds" << endl;
     long long time2 = 0;
     float d2;
     for(int i = 0; i<repeat; i++){
         auto start2 = high_resolution_clock::now();
-        d2 = bruteForce_flt(points, size);
+//        bucketer1(points, size);
+        d2 = bucketSort(points, size);
         auto stop2 = high_resolution_clock::now();
         auto duration2 = duration_cast<microseconds>(stop2 - start2);
         time2 += duration2.count();
     }
-//    printf("The smallest distance with BF is %.27f",d2);
+    printf("The smallest distance with Bucket is %.27f",d2);
     cout << " with time of computation of: " << time2/repeat << " microseconds" << endl;
 
 
