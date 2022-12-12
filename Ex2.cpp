@@ -19,7 +19,9 @@ using namespace std;
 std::vector <float> randomize_flt(std::vector <float> vect, double size){
     std::random_device rd;
     std::default_random_engine gen(rd());
-    std::uniform_real_distribution<float> dist(0.0, 10000);
+    std::uniform_real_distribution<float> dist(0.0000000000001,10000);
+
+
 //    std::normal_distribution<float> dist(1, 0);
     for (int i = 0; i < size; ++i) {
         vect.at(i) = (dist(gen)); //cambiado para evitar añadir al final
@@ -99,8 +101,14 @@ vector<vector<float>> bucketer1(const vector<float>& vect, int size){ //Old func
 vector<vector<float>> bucketer2(const vector<float>& vect, int size){ //Old function that doesn't take into account the size of buckets
     vector<vector<float>> buckets(256);
     int exp = 0;
+    float min = *std::min_element(vect.begin(), vect.end());
+    frexp(min,&exp);
+    int exp_min=exp;
+    exp=0;
     for(float i : vect){
-//        frexp(i, &exp);
+        frexp(i, &exp);
+        if(exp>exp_min+24)
+            continue;
         buckets.at(exp+127).push_back(i);
     }
     return buckets;
@@ -140,7 +148,7 @@ int nextBucket(const vector<vector<float>>& buckets, int bucketNum){
 float bucketSort(const vector<float>& vect, int size){
 
     vector<vector<float>> buckets = bucketer1(vect, size);
-//    print_buckets(buckets);
+    //print_buckets(buckets);
     float min = FLT_MAX;
     int bucket_num = 0;
     float d;
@@ -165,7 +173,34 @@ float bucketSort(const vector<float>& vect, int size){
     }
     return min;
 }
+float bucketSort3(const vector<float>& vect, int size){
 
+    vector<vector<float>> buckets = bucketer2(vect, size);
+    //print_buckets(buckets);
+    float min = FLT_MAX;
+    int bucket_num = 0;
+    float d;
+    for(vector<float> bucket : buckets) {
+        bucket_num ++;
+        if (bucket.size() > 1) {
+            std::sort(bucket.begin(), bucket.end());
+            d = dist_b(bucket);
+            if(d < min && d!=0) min = d;
+            if(bucket_num < buckets.size() && !buckets.at(bucket_num).empty()){
+                std::sort(buckets[bucket_num].begin(), buckets[bucket_num].end());
+                d = dist_flt(bucket.back(),buckets.at(bucket_num).front());
+                if(d < min && d!= 0) min = d;
+            }
+        }else if (bucket.size() == 1){
+            int next = nextBucket(buckets,bucket_num-1);
+            if(next!=0){
+                d = dist_flt(bucket.back(),buckets.at(next).front());
+                if(d < min && d!= 0) min = d;
+            }
+        }
+    }
+    return min;
+}
 float bucketSort2(const vector<float>& vect, int size){
 
     vector<vector<float>> buckets = bucketer1(vect, size);
@@ -218,7 +253,7 @@ float bucketSort2(const vector<float>& vect, int size){
 
 float bucketSortW2(const vector<float>& vect, int size){
     vector<vector<float>> buckets = bucketer1(vect, size);
-//    print_buckets(buckets);
+    print_buckets(buckets);
     float min = FLT_MAX;
     int bucket_num = 0;
     float d;
@@ -226,7 +261,7 @@ float bucketSortW2(const vector<float>& vect, int size){
     int cc;
     cc = 0;
     float minp=FLT_MAX;
-    for(int i=0;i<buckets.size() && cc<25;i++) {
+    for(int i=0;i<buckets.size() && cc<24;i++) {
         bucket_num ++;
         if (buckets[i].size() > 1) {
             std::sort(buckets[i].begin(), buckets[i].end());
@@ -331,7 +366,7 @@ float bucketSort_brute(const vector<float>& vect, int size){
 
 int main(){
     //srand(time(nullptr)) ;
-    double size = 1e10;
+    unsigned long long size = 2e9;
     std::vector <float> points (size); //With this we initialize it as an array with size elements avoiding copies
     points = randomize_flt(points,size);
 //    points.at(1) = 0.0000000000000001;
@@ -341,7 +376,7 @@ int main(){
 //    auto stop2 = high_resolution_clock::now();
 //    auto duration2 = duration_cast<microseconds>(stop2 - start2);
 //    cout << " with time of computation of: " << duration2.count() << " microseconds" << endl;
-    int repeat = 1;
+    int repeat = 3;
     long long time1 = 0;
     float d1;
     for(int i = 0; i<repeat; i++){
@@ -352,7 +387,7 @@ int main(){
         cout <<"The local date and time is: " <<b <<endl;
         auto start1 = high_resolution_clock::now();
 //        bucketer(points,size);
-        d1 = bucketSortW2(points, size);
+        d1 = bucketSort3(points, size);
         auto stop1 = high_resolution_clock::now();
         auto duration1 = duration_cast<microseconds>(stop1 - start1);
         time1 += duration1.count();
