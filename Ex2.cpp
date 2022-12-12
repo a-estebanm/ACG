@@ -16,7 +16,7 @@ using namespace std;
 using namespace std;
 
 
-std::vector <float> randomize_flt(std::vector <float> vect, int size){
+std::vector <float> randomize_flt(std::vector <float> vect, double size){
     std::random_device rd;
     std::default_random_engine gen(rd());
     std::uniform_real_distribution<float> dist(0.0, 10000);
@@ -156,7 +156,7 @@ float bucketSort(const vector<float>& vect, int size){
                 if(d < min && d!= 0) min = d;
             }
         }else if (bucket.size() == 1){
-            int next = nextBucket(buckets,bucket_num);
+            int next = nextBucket(buckets,bucket_num-1);
             if(next!=0){
                 d = dist_flt(bucket.back(),buckets.at(next).front());
                 if(d < min && d!= 0) min = d;
@@ -201,7 +201,7 @@ float bucketSort2(const vector<float>& vect, int size){
                 }
             }
         }else if (bucket.size() == 1){
-            int next = nextBucket(buckets,bucket_num);
+            int next = nextBucket(buckets,bucket_num-1);
             if(next!=0){
                 d = dist_flt(bucket.back(),buckets.at(next).front());
                 if(d < min && d!= 0) {
@@ -218,7 +218,7 @@ float bucketSort2(const vector<float>& vect, int size){
 
 float bucketSortW2(const vector<float>& vect, int size){
     vector<vector<float>> buckets = bucketer1(vect, size);
-    print_buckets(buckets);
+//    print_buckets(buckets);
     float min = FLT_MAX;
     int bucket_num = 0;
     float d;
@@ -246,7 +246,7 @@ float bucketSortW2(const vector<float>& vect, int size){
                 if(d < min && d!= 0) min = d;
             }
         }else if (buckets[i].size() == 1){
-            int next = nextBucket(buckets,bucket_num);
+            int next = nextBucket(buckets,bucket_num-1);
             if(next!=0){
                 d = dist_flt(buckets[i].back(),buckets.at(next).front());
                 if(d < min && d!= 0) min = d;
@@ -287,7 +287,7 @@ float bucketSortW(const vector<float>& vect, int size){
                 cc++;
             }
         }else if (buckets[i].size() == 1){
-            int next = nextBucket(buckets,bucket_num);
+            int next = nextBucket(buckets,bucket_num-1);
             if(next!=0){
                 d = dist_flt(buckets[i].back(),buckets.at(next).front());
                 if(d < min && d!= 0) {
@@ -319,7 +319,7 @@ float bucketSort_brute(const vector<float>& vect, int size){
                 if(d < min && d!= 0) min = d;
             }
         }else if (bucket.size() == 1){
-            int next = nextBucket(buckets,bucket_num);
+            int next = nextBucket(buckets,bucket_num-1);
             if(next!=0){
                 d = dist_flt(bucket.front(),buckets.at(next).front());
                 if(d < min && d!= 0) min = d;
@@ -330,12 +330,12 @@ float bucketSort_brute(const vector<float>& vect, int size){
 }
 
 int main(){
-    //srand(time(nullptr));
-    int size = 1000000;
+    //srand(time(nullptr)) ;
+    double size = 1e10;
     std::vector <float> points (size); //With this we initialize it as an array with size elements avoiding copies
     points = randomize_flt(points,size);
-    points.at(1) = 0.0000000000000001;
-    points.at(2) = 0.0000000000000002;
+//    points.at(1) = 0.0000000000000001;
+//    points.at(2) = 0.0000000000000002;
 //    auto start2 = high_resolution_clock::now();
 //    cout << "\nThe smallest distance with BF is " << bruteForce_flt(points, size);
 //    auto stop2 = high_resolution_clock::now();
@@ -345,6 +345,11 @@ int main(){
     long long time1 = 0;
     float d1;
     for(int i = 0; i<repeat; i++){
+        time_t a = time(0);
+
+        char* b = ctime(&a);
+
+        cout <<"The local date and time is: " <<b <<endl;
         auto start1 = high_resolution_clock::now();
 //        bucketer(points,size);
         d1 = bucketSortW2(points, size);
@@ -354,9 +359,19 @@ int main(){
     }
     printf("The smallest distance with Window is %.27f",d1);
     cout << " with time of computation of: " << time1/repeat << " microseconds" << endl;
+    time_t a = time(0);
+
+    char* b = ctime(&a);
+
+    cout <<"The local date and time is: " <<b <<endl;
     long long time2 = 0;
     float d2;
     for(int i = 0; i<repeat; i++){
+        time_t a = time(0);
+
+        char* b = ctime(&a);
+
+        cout <<"The local date and time is: " <<b <<endl;
         auto start2 = high_resolution_clock::now();
 //        bucketer1(points, size);
         d2 = bucketSort(points, size);
@@ -366,6 +381,11 @@ int main(){
     }
     printf("The smallest distance with Bucket is %.27f",d2);
     cout << " with time of computation of: " << time2/repeat << " microseconds" << endl;
+    time_t a2 = time(0);
+
+    char* b2 = ctime(&a2);
+
+    cout <<"The local date and time is: " <<b2 <<endl;
 
 
     /*
