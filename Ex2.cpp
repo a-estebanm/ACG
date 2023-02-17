@@ -16,14 +16,14 @@ using namespace std;
 using namespace std;
 
 
-std::vector<float> randomize_flt(std::vector<float> vect, double size) {
+std::vector<float> randomize_flt(std::vector<float> vect, long long size) {
     std::random_device rd;
     std::default_random_engine gen(rd());
     std::uniform_real_distribution<float> dist(0.0000000000001, 10000);
 
 
 //    std::normal_distribution<float> dist(1, 0);
-    for (int i = 0; i < size; ++i) {
+    for (long long i = 0; i < size; ++i) {
         vect.at(i) = (dist(gen)); //cambiado para evitar añadir al final
     }
     return vect;
@@ -33,7 +33,7 @@ float dist_flt(float x1, float x2) {
     return abs(x2 - x1);
 }
 
-float bruteForce_flt(std::vector<float> vect, int n) {
+float bruteForce_flt(std::vector<float> vect, long long n) {
     float min = FLT_MAX;
     float x1;
     float x2;
@@ -48,7 +48,74 @@ float bruteForce_flt(std::vector<float> vect, int n) {
             }
         }
     }
-    printf("---------Puntos:\nX1: %.26f\nX2: %.26f\n", x1, x2);
+    return min;
+}
+
+float sorted_cpp(std::vector<float> vect, long long n) {
+    float min = FLT_MAX;
+    float x1;
+    float x2;
+    float d;
+    std::sort(vect.begin(), vect.end());
+    for (int i = 1; i < n-1; i++) {
+            d = dist_flt(vect.at(i), vect.at(i+1));
+            if (d < min && d != 0) {
+                min = d;
+                x1 = vect.at(i);
+                x2 = vect.at(i+1);
+            }
+    }
+    return min;
+}
+
+int compare (const void * a, const void * b){
+    return ( *(int*)a - *(int*)b );
+}
+
+//float sorted_quick(std::vector<float> vect, long long n) {
+//    float min = FLT_MAX;
+//    float x1;
+//    float x2;
+//    float d;
+//    std::qsort(vect, n, sizeof(float), compare);
+//    for (int i = 1; i < n-1; i++) {
+//        d = dist_flt(vect.at(i), vect.at(i+1));
+//        if (d < min && d != 0) {
+//            min = d;
+//            x1 = vect.at(i);
+//            x2 = vect.at(i+1);
+//        }
+//    }
+//    return min;
+//}
+
+void shellSort(std::vector<float> arr, int n){
+    n = arr.size();
+    for (int gap = n/2; gap > 0; gap /= 2){
+        for (int i = gap; i < n; i += 1){
+            float temp = arr.at(i);
+            int j;
+            for (j = i; j >= gap && arr.at(j - gap) > temp; j -= gap)
+                arr.at(j) = arr.at(j - gap);
+            arr.at(j) = temp;
+        }
+    }
+}
+
+float sorted_shell(std::vector<float> vect, long long n) {
+    float min = FLT_MAX;
+    float x1;
+    float x2;
+    float d;
+    shellSort(vect, n);
+    for (int i = 1; i < n-1; i++) {
+        d = dist_flt(vect.at(i), vect.at(i+1));
+        if (d < min && d != 0) {
+            min = d;
+            x1 = vect.at(i);
+            x2 = vect.at(i+1);
+        }
+    }
     return min;
 }
 
@@ -87,7 +154,7 @@ void print_buckets(vector<vector<float>> buckets) {
 
 
 vector<vector<float>>
-bucketer1(const vector<float> &vect, int size) { //Old function that doesn't take into account the size of buckets
+bucketer1(const vector<float> &vect) { //Old function that doesn't take into account the size of buckets
     vector<vector<float>> buckets(256);
     int exp;
     for (float i: vect) {
@@ -98,7 +165,7 @@ bucketer1(const vector<float> &vect, int size) { //Old function that doesn't tak
 }
 
 vector<vector<float>>
-bucketer2(vector<float> &vect, int size) {
+bucketer2(vector<float> &vect) {
     vector<vector<float>> buckets(256);
     int exp = 0;
     vector<float> vectErased;
@@ -106,32 +173,38 @@ bucketer2(vector<float> &vect, int size) {
     bool twoElements = false;
 
     auto min = std::min_element(vect.begin(), vect.end());
+
     float minN = *min;//TODO:si borro el elemento minimo cambia el número de buckets
     frexp(minN, &exp);
     int minExp = exp;
+
     buckets.at(exp + 127).push_back(minN);
     vectErased.push_back(minN);
     vect.erase(min);
+
     while (!twoElements) {
         auto min2 = std::min_element(vect.begin(), vect.end());
         float minN2 = *min2;
         frexp(minN2, &exp);
         if (exp <= minExp + 24)
             twoElements = true;
-        else{
+        else {
             minExp = exp;
             vectErased.push_back(*min2);
             vect.erase(min2);
         }
 
     }
-    vect.insert( vect.end(), vectErased.begin(), vectErased.end() );
+
+    vect.insert(vect.end(), vectErased.begin(), vectErased.end());
+
     for (float i: vect) {
         frexp(i, &exp);
         if (exp > minExp + 24)
             continue;
         buckets.at(exp + 127).push_back(i);
-        }
+    }
+
     return buckets;
 }
 
@@ -167,10 +240,8 @@ int nextBucket(const vector<vector<float>> &buckets, int bucketNum) {
     return 0;
 }
 
-float bucketSort(const vector<float> &vect, int size) {
 
-    vector<vector<float>> buckets = bucketer1(vect, size);
-    //print_buckets(buckets);
+float bucketSort(vector<vector<float>> buckets) {
     float min = FLT_MAX;
     int bucket_num = 0;
     float d;
@@ -188,6 +259,7 @@ float bucketSort(const vector<float> &vect, int size) {
         } else if (bucket.size() == 1) {
             int next = nextBucket(buckets, bucket_num - 1);
             if (next != 0) {
+                std::sort(buckets[next].begin(), buckets[next].end());
                 d = dist_flt(bucket.back(), buckets.at(next).front());
                 if (d < min && d != 0) min = d;
             }
@@ -196,263 +268,115 @@ float bucketSort(const vector<float> &vect, int size) {
     return min;
 }
 
-float bucketSort3(vector<float> &vect, int size) {
-
-    vector<vector<float>> buckets = bucketer2(vect, size);
-    //print_buckets(buckets);
-    float min = FLT_MAX;
-    int bucket_num = 0;
-    float d;
-    for (vector<float> bucket: buckets) {
-        bucket_num++;
-        if (bucket.size() > 1) {
-            std::sort(bucket.begin(), bucket.end());
-            d = dist_b(bucket);
-            if (d < min && d != 0) min = d;
-            if (bucket_num < buckets.size() && !buckets.at(bucket_num).empty()) {
-                std::sort(buckets[bucket_num].begin(), buckets[bucket_num].end());
-                d = dist_flt(bucket.back(), buckets.at(bucket_num).front());
-                if (d < min && d != 0) min = d;
-            }
-        } else if (bucket.size() == 1) {
-            int next = nextBucket(buckets, bucket_num - 1);
-            if (next != 0) {
-                d = dist_flt(bucket.back(), buckets.at(next).front());
-                if (d < min && d != 0) min = d;
-            }
-        }
-    }
-    return min;
+float bucketNoWindow(vector<float> &vect) {
+    vector<vector<float>> buckets = bucketer1(vect);
+    return bucketSort(buckets);
 }
 
-float bucketSort2(const vector<float> &vect, int size) {
-
-    vector<vector<float>> buckets = bucketer1(vect, size);
-//    print_buckets(buckets);
-    float min = dist_b(buckets.at(1));
-    int bucket_num = 0;
-    float d;
-    float x1;
-    float x2;
-    for (vector<float> bucket: buckets) {
-        bucket_num++;
-        if (bucket.size() > 1) {
-            std::sort(bucket.begin(), bucket.end());
-            float d1 = FLT_MAX;
-            float t;
-            for (int i = 1; i < bucket.size(); i++) {
-                t = dist_flt(bucket.at(i), bucket.at(i - 1));
-                if (t < d1) {
-                    d1 = t;
-                    x1 = bucket.at(i);
-                    x2 = bucket.at(i - 1);
-                }
-            }
-            d = d1;
-            if (d < min && d != 0) min = d;
-            if (bucket_num < buckets.size() && !buckets.at(bucket_num).empty()) {
-                std::sort(buckets[bucket_num].begin(), buckets[bucket_num].end());
-                d = dist_flt(bucket.back(), buckets.at(bucket_num).front());
-                if (d < min && d != 0) {
-                    min = d;
-                    x1 = bucket.back();
-                    x2 = buckets.at(bucket_num).front();
-                }
-            }
-        } else if (bucket.size() == 1) {
-            int next = nextBucket(buckets, bucket_num - 1);
-            if (next != 0) {
-                d = dist_flt(bucket.back(), buckets.at(next).front());
-                if (d < min && d != 0) {
-                    min = d;
-                    x1 = bucket.back();
-                    x2 = buckets.at(next).front();
-                }
-            }
-        }
-    }
-    printf("---------Puntos:\nX1: %.26f\nX2: %.26f\n", x1, x2);
-    return min;
+float bucketWindow(vector<float> &vect) {
+    vector<vector<float>> buckets = bucketer2(vect);
+    return bucketSort(buckets);
 }
 
-float bucketSortW2(const vector<float> &vect, int size) {
-    vector<vector<float>> buckets = bucketer1(vect, size);
-    //print_buckets(buckets);
-    float min = FLT_MAX;
-    int bucket_num = 0;
-    float d;
-    float actual_min;
-    int cc;
-    cc = 0;
-    float minp = FLT_MAX;
-    for (int i = 0; i < buckets.size() && cc < 24; i++) {
-        bucket_num++;
-        if (buckets[i].size() > 1) {
-            std::sort(buckets[i].begin(), buckets[i].end());
-
-            actual_min = buckets[i][0];
-            if (minp > actual_min) {
-                cc = 0;
-                minp = actual_min;
-            } else {
-                cc++;
-            }
-            d = dist_b(buckets[i]);
-            if (d < min && d != 0) min = d;
-            if (bucket_num < buckets.size() && !buckets.at(bucket_num).empty()) {
-                std::sort(buckets[i + 1].begin(), buckets[i + 1].end());
-                d = dist_flt(buckets[i].back(), buckets.at(bucket_num).front());
-                if (d < min && d != 0) min = d;
-            }
-        } else if (buckets[i].size() == 1) {
-            int next = nextBucket(buckets, bucket_num - 1);
-            if (next != 0) {
-                d = dist_flt(buckets[i].back(), buckets.at(next).front());
-                if (d < min && d != 0) min = d;
-            }
-        }
-    }
-    return min;
-}
-
-float bucketSortW(const vector<float> &vect, int size) {
-
-    vector<vector<float>> buckets = bucketer(vect, size);
-//    print_buckets(buckets);
-    float min = FLT_MAX;
-    int bucket_num = 0;
-    float d;
-    int cc = 0;
-    for (int i = 0; i < buckets.size() && cc < 25; i++) {
-        bucket_num++;
-        if (buckets[i].size() > 1) {
-            std::sort(buckets[i].begin(), buckets[i].end());
-
-            d = dist_b(buckets[i]);
-            if (d < min && d != 0) {
-                min = d;
-                cc = 0;
-            }
-            if (bucket_num < buckets.size() && !buckets.at(bucket_num).empty()) {
-                std::sort(buckets[i + 1].begin(), buckets[i + 1].end());
-                d = dist_flt(buckets[i].back(), buckets.at(bucket_num).front());
-                if (d < min && d != 0) {
-                    min = d;
-                    cc = 0;
-                } else {
-                    cc++;
-                }
-            } else {
-                cc++;
-            }
-        } else if (buckets[i].size() == 1) {
-            int next = nextBucket(buckets, bucket_num - 1);
-            if (next != 0) {
-                d = dist_flt(buckets[i].back(), buckets.at(next).front());
-                if (d < min && d != 0) {
-                    min = d;
-                    cc = 0;
-                } else {
-                    cc++;
-                }
-            }
-        }
-    }
-    return min;
-}
-
-
-float bucketSort_brute(const vector<float> &vect, int size) {
-    vector<vector<float>> buckets = bucketer(vect, size);
-    float min = FLT_MAX;
-    int bucket_num = 0;
-    float d;
-    for (vector<float> bucket: buckets) {
-        bucket_num++;
-        if (bucket.size() > 1) {
-            d = bruteForce_flt(bucket, bucket.size());
-            if (d < min) min = d;
-            if (bucket_num < buckets.size() && !buckets.at(bucket_num).empty()) {
-                d = dist_flt(bucket.back(), buckets.at(bucket_num).front());
-                if (d < min && d != 0) min = d;
-            }
-        } else if (bucket.size() == 1) {
-            int next = nextBucket(buckets, bucket_num - 1);
-            if (next != 0) {
-                d = dist_flt(bucket.front(), buckets.at(next).front());
-                if (d < min && d != 0) min = d;
-            }
-        }
-    }
-    return min;
-}
 
 int main() {
+//    freopen("results.txt", "w", stdout);
     //srand(time(nullptr)) ;
-    unsigned long long size = 1e9;
-    std::vector<float> points(size); //With this we initialize it as an array with size elements avoiding copies
-    points = randomize_flt(points, size);
-//    points.at(1) = 0.0000000000000001;
-//    points.at(2) = 0.0000000000000002;
-//    auto start2 = high_resolution_clock::now();
-//    cout << "\nThe smallest distance with BF is " << bruteForce_flt(points, size);
-//    auto stop2 = high_resolution_clock::now();
-//    auto duration2 = duration_cast<microseconds>(stop2 - start2);
-//    cout << " with time of computation of: " << duration2.count() << " microseconds" << endl;
-    int repeat = 3;
-    long long time1 = 0;
-    float d1;
-    for (int i = 0; i < repeat; i++) {
-        time_t a = time(0);
+    long long sizes[10] = { 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 2000000000};
+    int repeat = 1;
+    for (long long size: sizes) {
+        std::vector<float> points(size);
+        points = randomize_flt(points, size);
+        printf("----------- Size %lld  --------------\n", size);
+        long long time1 = 0;
+        float d1;
+        for (int i = 0; i < repeat; i++) {
 
-        char *b = ctime(&a);
+            auto start1 = high_resolution_clock::now();
+            d1 = bucketWindow(points);
+            auto stop1 = high_resolution_clock::now();
+            auto duration1 = duration_cast<microseconds>(stop1 - start1);
+            time1 += duration1.count();
+        }
+        printf("The smallest distance with BucketWindow is %.27f", d1);
+        cout << " with time of computation of: " << time1 / repeat << " microseconds" << endl;
 
-        //cout <<"The local date and time is: " <<b <<endl;
-        auto start1 = high_resolution_clock::now();
-//        bucketer(points,size);
-        d1 = bucketSort3(points, size);
-        auto stop1 = high_resolution_clock::now();
-        auto duration1 = duration_cast<microseconds>(stop1 - start1);
-        time1 += duration1.count();
+
+        long long time2 = 0;
+        float d2;
+        for (int i = 0; i < repeat; i++) {
+
+
+            auto start2 = high_resolution_clock::now();
+            d2 = bucketNoWindow(points);
+            auto stop2 = high_resolution_clock::now();
+            auto duration2 = duration_cast<microseconds>(stop2 - start2);
+            time2 += duration2.count();
+        }
+        printf("The smallest distance with BucketNoWindow is %.27f", d2);
+        cout << " with time of computation of: " << time2 / repeat << " microseconds" << endl;
+
+        if(size < 100000000){
+            long long time3 = 0;
+            float d3;
+            for (int i = 0; i < repeat; i++) {
+
+
+                auto start3 = high_resolution_clock::now();
+                d3 = bruteForce_flt(points, size);
+                auto stop3 = high_resolution_clock::now();
+                auto duration3 = duration_cast<microseconds>(stop3 - start3);
+                time3 += duration3.count();
+            }
+            printf("The smallest distance with BruteForce is %.27f", d3);
+            cout << " with time of computation of: " << time3 / repeat << " microseconds" << endl;
+
+
+            long long time4 = 0;
+            float d4;
+            for (int i = 0; i < repeat; i++) {
+
+
+                auto start4 = high_resolution_clock::now();
+                d4 = sorted_cpp(points, size);
+                auto stop4 = high_resolution_clock::now();
+                auto duration4 = duration_cast<microseconds>(stop4 - start4);
+                time4 += duration4.count();
+            }
+            printf("The smallest distance with sorted_cpp is %.27f", d4);
+            cout << " with time of computation of: " << time4 / repeat << " microseconds" << endl;
+
+
+//            long long time5 = 0;
+//            float d5;
+//            for (int i = 0; i < repeat; i++) {
+//
+//
+//                auto start5 = high_resolution_clock::now();
+//                d5 = sorted_quick(points, size);
+//                auto stop5 = high_resolution_clock::now();
+//                auto duration5 = duration_cast<microseconds>(stop5 - start5);
+//                time5 += duration5.count();
+//            }
+//            printf("The smallest distance with sorted_quick is %.27f", d5);
+//            cout << " with time of computation of: " << time5 / repeat << " microseconds" << endl;
+
+
+            long long time6 = 0;
+            float d6;
+            for (int i = 0; i < repeat; i++) {
+
+
+                auto start6 = high_resolution_clock::now();
+                d6 = sorted_shell(points, size);
+                auto stop6 = high_resolution_clock::now();
+                auto duration6 = duration_cast<microseconds>(stop6 - start6);
+                time6 += duration6.count();
+            }
+            printf("The smallest distance with sorted_shell is %.27f", d6);
+            cout << " with time of computation of: " << time6 / repeat << " microseconds" << endl;
+        }
+
     }
-    printf("The smallest distance with Window is %.27f", d1);
-    cout << " with time of computation of: " << time1 / repeat << " microseconds" << endl;
-    time_t a = time(0);
-
-    char *b = ctime(&a);
-
-    //cout <<"The local date and time is: " <<b <<endl;
-    long long time2 = 0;
-    float d2;
-    for (int i = 0; i < repeat; i++) {
-        time_t a = time(0);
-
-        char *b = ctime(&a);
-
-        //cout <<"The local date and time is: " <<b <<endl;
-        auto start2 = high_resolution_clock::now();
-//        bucketer1(points, size);
-        d2 = bucketSort(points, size);
-        auto stop2 = high_resolution_clock::now();
-        auto duration2 = duration_cast<microseconds>(stop2 - start2);
-        time2 += duration2.count();
-    }
-    printf("The smallest distance with Bucket is %.27f", d2);
-    cout << " with time of computation of: " << time2 / repeat << " microseconds" << endl;
-    time_t a2 = time(0);
-
-    char *b2 = ctime(&a2);
-
-    //cout <<"The local date and time is: " <<b2 <<endl;
-
-
-    /*
-    auto start4 = high_resolution_clock::now();
-    cout << "The smallest distance with BucketSortW2 is " << bucketSortW2(points);
-    auto stop4 = high_resolution_clock::now();
-    auto duration4 = duration_cast<microseconds>(stop4 - start4);
-    cout << " with time of computation of: " << duration4.count() << " microseconds" << endl;
-    */
-
 
 }
