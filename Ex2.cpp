@@ -305,7 +305,7 @@ float bucketWindow(vector<float> vect) {
 
 
 int main() {
-//    freopen("results.txt", "w", stdout);
+    freopen("results.txt", "w", stdout);
     //srand(time(nullptr)) ;
     long long sizes[10] = {10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 2000000000};
     int repeat = 1;
