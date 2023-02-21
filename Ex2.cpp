@@ -72,24 +72,49 @@ int compare (const void * a, const void * b){
     return ( *(int*)a - *(int*)b );
 }
 
-//float sorted_quick(std::vector<float> vect, long long n) {
-//    float min = FLT_MAX;
-//    float x1;
-//    float x2;
-//    float d;
-//    std::qsort(vect, n, sizeof(float), compare);
-//    for (int i = 1; i < n-1; i++) {
-//        d = dist_flt(vect.at(i), vect.at(i+1));
-//        if (d < min && d != 0) {
-//            min = d;
-//            x1 = vect.at(i);
-//            x2 = vect.at(i+1);
-//        }
-//    }
-//    return min;
-//}
+int Partition(vector<float> &v, int start, int end){
 
-void shellSort(std::vector<float> arr, int n){
+    int pivot = end;
+    int j = start;
+    for(int i=start;i<end;++i){
+        if(v[i]<v[pivot]){
+            swap(v[i],v[j]);
+            ++j;
+        }
+    }
+    swap(v[j],v[pivot]);
+    return j;
+
+}
+
+void Quicksort(vector<float> &v, int start, int end ){
+
+    if(start<end){
+        int p = Partition(v,start,end);
+        Quicksort(v,start,p-1);
+        Quicksort(v,p+1,end);
+    }
+
+}
+
+float sorted_quick(std::vector<float> vect, long long n) {
+    float min = FLT_MAX;
+    float x1;
+    float x2;
+    float d;
+    Quicksort(vect, 0, vect.size());
+    for (int i = 1; i < n-1; i++) {
+        d = dist_flt(vect.at(i), vect.at(i+1));
+        if (d < min && d != 0) {
+            min = d;
+            x1 = vect.at(i);
+            x2 = vect.at(i+1);
+        }
+    }
+    return min;
+}
+
+void shellSort(std::vector<float> &arr, int n){
     n = arr.size();
     for (int gap = n/2; gap > 0; gap /= 2){
         for (int i = gap; i < n; i += 1){
@@ -268,12 +293,12 @@ float bucketSort(vector<vector<float>> buckets) {
     return min;
 }
 
-float bucketNoWindow(vector<float> &vect) {
+float bucketNoWindow(vector<float> vect) {
     vector<vector<float>> buckets = bucketer1(vect);
     return bucketSort(buckets);
 }
 
-float bucketWindow(vector<float> &vect) {
+float bucketWindow(vector<float> vect) {
     vector<vector<float>> buckets = bucketer2(vect);
     return bucketSort(buckets);
 }
@@ -282,11 +307,11 @@ float bucketWindow(vector<float> &vect) {
 int main() {
 //    freopen("results.txt", "w", stdout);
     //srand(time(nullptr)) ;
-    long long sizes[10] = { 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 2000000000};
+    long long sizes[10] = {10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 2000000000};
     int repeat = 1;
     for (long long size: sizes) {
-        std::vector<float> points(size);
-        points = randomize_flt(points, size);
+        std::vector<float> points2(size);
+        const std::vector<float> points = randomize_flt(points2, size);
         printf("----------- Size %lld  --------------\n", size);
         long long time1 = 0;
         float d1;
@@ -316,7 +341,51 @@ int main() {
         printf("The smallest distance with BucketNoWindow is %.27f", d2);
         cout << " with time of computation of: " << time2 / repeat << " microseconds" << endl;
 
-        if(size < 100000000){
+        long long time4 = 0;
+        float d4;
+        for (int i = 0; i < repeat; i++) {
+
+
+            auto start4 = high_resolution_clock::now();
+            d4 = sorted_cpp(points, size);
+            auto stop4 = high_resolution_clock::now();
+            auto duration4 = duration_cast<microseconds>(stop4 - start4);
+            time4 += duration4.count();
+        }
+        printf("The smallest distance with sorted_cpp is %.27f", d4);
+        cout << " with time of computation of: " << time4 / repeat << " microseconds" << endl;
+
+
+        long long time5 = 0;
+        float d5;
+        for (int i = 0; i < repeat; i++) {
+
+
+            auto start5 = high_resolution_clock::now();
+            d5 = sorted_quick(points, size);
+            auto stop5 = high_resolution_clock::now();
+            auto duration5 = duration_cast<microseconds>(stop5 - start5);
+            time5 += duration5.count();
+        }
+        printf("The smallest distance with sorted_quick is %.27f", d5);
+        cout << " with time of computation of: " << time5 / repeat << " microseconds" << endl;
+
+
+        long long time6 = 0;
+        float d6;
+        for (int i = 0; i < repeat; i++) {
+
+
+            auto start6 = high_resolution_clock::now();
+            d6 = sorted_shell(points, size);
+            auto stop6 = high_resolution_clock::now();
+            auto duration6 = duration_cast<microseconds>(stop6 - start6);
+            time6 += duration6.count();
+        }
+        printf("The smallest distance with sorted_shell is %.27f", d6);
+        cout << " with time of computation of: " << time6 / repeat << " microseconds" << endl;
+
+        if (size < 100000000) {
             long long time3 = 0;
             float d3;
             for (int i = 0; i < repeat; i++) {
@@ -332,51 +401,7 @@ int main() {
             cout << " with time of computation of: " << time3 / repeat << " microseconds" << endl;
 
 
-            long long time4 = 0;
-            float d4;
-            for (int i = 0; i < repeat; i++) {
-
-
-                auto start4 = high_resolution_clock::now();
-                d4 = sorted_cpp(points, size);
-                auto stop4 = high_resolution_clock::now();
-                auto duration4 = duration_cast<microseconds>(stop4 - start4);
-                time4 += duration4.count();
-            }
-            printf("The smallest distance with sorted_cpp is %.27f", d4);
-            cout << " with time of computation of: " << time4 / repeat << " microseconds" << endl;
-
-
-//            long long time5 = 0;
-//            float d5;
-//            for (int i = 0; i < repeat; i++) {
-//
-//
-//                auto start5 = high_resolution_clock::now();
-//                d5 = sorted_quick(points, size);
-//                auto stop5 = high_resolution_clock::now();
-//                auto duration5 = duration_cast<microseconds>(stop5 - start5);
-//                time5 += duration5.count();
-//            }
-//            printf("The smallest distance with sorted_quick is %.27f", d5);
-//            cout << " with time of computation of: " << time5 / repeat << " microseconds" << endl;
-
-
-            long long time6 = 0;
-            float d6;
-            for (int i = 0; i < repeat; i++) {
-
-
-                auto start6 = high_resolution_clock::now();
-                d6 = sorted_shell(points, size);
-                auto stop6 = high_resolution_clock::now();
-                auto duration6 = duration_cast<microseconds>(stop6 - start6);
-                time6 += duration6.count();
-            }
-            printf("The smallest distance with sorted_shell is %.27f", d6);
-            cout << " with time of computation of: " << time6 / repeat << " microseconds" << endl;
         }
 
     }
-
 }
